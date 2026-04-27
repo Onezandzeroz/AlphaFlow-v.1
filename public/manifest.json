@@ -1,0 +1,20 @@
+{
+  "name": "AlphaAi Accounting",
+  "short_name": "AlphaAi",
+  "description": "Intelligent Skat & Moms for moderne virksomheder",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8faf9",
+  "theme_color": "#0d9488",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "categories": ["finance", "business", "productivity"],
+  "lang": "da",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}
