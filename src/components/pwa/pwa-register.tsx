@@ -10,7 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 // ─── Expected SW version — MUST match CACHE_VERSION in sw.js ────────────
 // If this doesn't match the running SW's version, we force an update.
-const EXPECTED_SW_VERSION = 'alphaai-v3';
+const EXPECTED_SW_VERSION = 'alphaai-v4';
 
 // ─── Camera permission helpers ─────────────────────────────────────────
 

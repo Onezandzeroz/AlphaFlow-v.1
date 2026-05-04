@@ -1,17 +1,19 @@
-// ── Service Worker v3 — nuclear cache fix ──────────────────────────
+// ── Service Worker v4 — navigation passthrough fix ────────────────────
 //
-// ROOT CAUSE of previous issues: the OLD SW (v1) used cache-first strategy
-// for .js files with 24h TTL. This meant code changes NEVER reached users
-// even after reinstalling the app, because the SW cache is separate from
-// the browser's regular site cache.
+// v4 change: Page navigation requests are NO LONGER intercepted by the SW.
+// Instead, they pass through to the browser's native handling. This prevents
+// the SW from serving the offline fallback page when the server is starting
+// up or momentarily unreachable — which previously made the app appear
+// "stuck" on "Du er offline" even when the network was fine.
 //
-// This v3 SW uses a completely different approach:
+// Strategy:
+//   - Page navigation: NOT intercepted (browser native)
 //   - JS/CSS: NETWORK ONLY — never cached, always fetched fresh
-//   - Pages: NETWORK ONLY — always fresh HTML so bundle references update
-//   - Static assets (images/fonts): stale-while-revalidate (safe to cache)
-//   - Version message: allows the app to query the SW version and force updates
+//   - API calls: network-first with short cache
+//   - Static assets (images/fonts): stale-while-revalidate
+//   - _next/data (RSC): network only
 //
-const CACHE_VERSION = 'alphaai-v3';
+const CACHE_VERSION = 'alphaai-v4';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 
@@ -94,11 +96,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Page navigation: NETWORK ONLY
-  // Pages MUST come from the network so the browser always gets the latest
-  // HTML which references the latest JS bundles. No caching at all.
+  // Page navigation: let the browser handle it natively.
+  // The service worker MUST NOT intercept navigation requests — if the
+  // server is starting up or momentarily unreachable, the SW's fetch()
+  // would fail and serve the offline fallback page, making the app appear
+  // "stuck" on "Du er offline" even when the network is fine.
   if (request.mode === 'navigate') {
-    event.respondWith(networkOnly(request));
     return;
   }
 
