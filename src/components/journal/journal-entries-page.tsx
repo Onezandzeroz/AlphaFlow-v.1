@@ -44,6 +44,7 @@ import {
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { PageHeader } from '@/components/shared/page-header';
 import { MobileFilterDropdown } from '@/components/shared/mobile-filter-dropdown';
+import { toast } from 'sonner';
 import {
   FileText,
   Plus,
@@ -65,6 +66,7 @@ import {
   ArrowRightLeft,
   Info,
   RotateCcw,
+  Send,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -411,6 +413,7 @@ export function JournalEntriesPage({ user }: JournalEntriesPageProps) {
             description: formDescription,
             reference: formReference || undefined,
             lines: payloadLines,
+            status: asDraft ? 'DRAFT' : 'POSTED',
           }),
         });
         if (!response.ok) {
@@ -423,9 +426,9 @@ export function JournalEntriesPage({ user }: JournalEntriesPageProps) {
           date: formDate,
           description: formDescription,
           lines: payloadLines,
+          status: asDraft ? 'DRAFT' : 'POSTED',
         };
         if (formReference.trim()) body.reference = formReference.trim();
-        if (asDraft) body.status = 'DRAFT'; // will still POST as DRAFT per API
 
         const response = await fetch('/api/journal-entries', {
           method: 'POST',
@@ -439,9 +442,23 @@ export function JournalEntriesPage({ user }: JournalEntriesPageProps) {
       }
 
       closeDialog();
+      toast.success(
+        asDraft
+          ? (isDanish ? 'Kladde gemt' : 'Draft saved')
+          : (isDanish ? 'Postering bogført' : 'Entry posted'),
+        {
+          description: formDescription,
+        }
+      );
       await fetchEntries();
     } catch (err) {
       console.error('Failed to save entry:', err);
+      toast.error(
+        isDanish ? 'Fejl ved gemning' : 'Failed to save',
+        {
+          description: err instanceof Error ? err.message : (isDanish ? 'Ukendt fejl' : 'Unknown error'),
+        }
+      );
     } finally {
       setDialogLoading(false);
     }
@@ -466,6 +483,31 @@ export function JournalEntriesPage({ user }: JournalEntriesPageProps) {
       setIsCancelling(false);
     }
   }, [cancelTarget, cancelReason, fetchEntries]);
+
+  // ─── Post Draft Entry ───────────────────────────────────────────────
+
+  const handlePostEntry = useCallback(async (entry: JournalEntry) => {
+    try {
+      const response = await fetch(`/api/journal-entries/${entry.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'POSTED' }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Post failed');
+      }
+      toast.success(isDanish ? 'Postering bogført' : 'Entry posted', {
+        description: entry.description,
+      });
+      await fetchEntries();
+    } catch (err) {
+      console.error('Failed to post entry:', err);
+      toast.error(isDanish ? 'Kunne ikke bogføre' : 'Failed to post', {
+        description: err instanceof Error ? err.message : (isDanish ? 'Ukendt fejl' : 'Unknown error'),
+      });
+    }
+  }, [fetchEntries, isDanish]);
 
   // ─── Expand/Collapse ───────────────────────────────────────────────────
 
@@ -829,6 +871,24 @@ export function JournalEntriesPage({ user }: JournalEntriesPageProps) {
                       <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                         {entry.status === 'DRAFT' && (
                           <>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handlePostEntry(entry)}
+                                    className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 h-8 w-8 p-0"
+                                  >
+                                    <Send className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{isDanish ? 'Bogfør postering' : 'Post Entry'}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
