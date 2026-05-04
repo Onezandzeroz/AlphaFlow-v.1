@@ -1335,22 +1335,24 @@ export function JournalEntriesPage({ user }: JournalEntriesPageProps) {
               {isDanish ? 'Annuller' : 'Cancel'}
             </Button>
 
-            {!editingEntry && (
-              <Button
-                variant="outline"
-                onClick={() => handleSubmit(true)}
-                disabled={dialogLoading || formLines.filter((l) => l.accountId).length < 2}
-                className="gap-1 dark:text-gray-300"
-              >
-                {dialogLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <FilePen className="h-4 w-4" />
-                )}
-                {isDanish ? 'Gem som kladde' : 'Save as Draft'}
-              </Button>
-            )}
+            {/* Save/Update as Draft — available in both new and edit mode */}
+            <Button
+              variant="outline"
+              onClick={() => handleSubmit(true)}
+              disabled={dialogLoading || formLines.filter((l) => l.accountId).length < 2}
+              className="gap-1 dark:text-gray-300"
+            >
+              {dialogLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FilePen className="h-4 w-4" />
+              )}
+              {editingEntry
+                ? (isDanish ? 'Opdater kladde' : 'Update Draft')
+                : (isDanish ? 'Gem som kladde' : 'Save as Draft')}
+            </Button>
 
+            {/* Post Entry — available in both new and edit mode */}
             <Button
               onClick={() => handleSubmit(false)}
               disabled={!canSubmit || dialogLoading}
@@ -1359,11 +1361,9 @@ export function JournalEntriesPage({ user }: JournalEntriesPageProps) {
               {dialogLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <FileCheck className="h-4 w-4" />
+                <Send className="h-4 w-4" />
               )}
-              {editingEntry
-                ? (isDanish ? 'Opdater postering' : 'Update Entry')
-                : (isDanish ? 'Bogfør' : 'Post Entry')}
+              {isDanish ? 'Bogfør' : 'Post Entry'}
             </Button>
           </DialogFooter>
         </DialogContent>
