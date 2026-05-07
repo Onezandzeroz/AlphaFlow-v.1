@@ -69,12 +69,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Block login if email is not verified (AppOwner/SuperDev is exempt)
-    if (!user.isSuperDev && !user.emailVerified) {
-      return NextResponse.json(
-        { error: 'verify_email', needsVerification: true, email: user.email },
-        { status: 403 }
-      );
+    // SuperDev (AlphaAi) is ALWAYS auto-verified — never requires email verification
+    if (user.isSuperDev && !user.emailVerified) {
+      await db.user.update({
+        where: { id: user.id },
+        data: { emailVerified: new Date() },
+      });
     }
 
     // Create secure session (auto-sets activeCompanyId from user's first company)
@@ -152,11 +152,14 @@ export async function POST(request: NextRequest) {
       ? 'AlphaAi - App-owner'
       : activeCompanyName;
 
+    // SuperDev is always reported as verified to the client
+    const effectiveEmailVerified = user.isSuperDev ? true : (user.emailVerified ?? false);
+
     return NextResponse.json({
       user: {
         id: user.id,
         email: user.email,
-        emailVerified: user.isSuperDev ? true : user.emailVerified,
+        emailVerified: effectiveEmailVerified,
         businessName: user.businessName,
         demoModeEnabled: user.demoModeEnabled ?? false,
         isSuperDev: user.isSuperDev,

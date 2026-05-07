@@ -13,6 +13,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // SuperDev (AlphaAi) never needs to verify email
+    if (ctx.isSuperDev) {
+      return NextResponse.json({ error: 'AppOwner does not need email verification' }, { status: 400 });
+    }
+
     // Look up the user to get fresh data
     const user = await db.user.findUnique({
       where: { id: ctx.id },
@@ -26,11 +31,6 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    // AppOwner (SuperDev) never needs email verification
-    if (ctx.isSuperDev) {
-      return NextResponse.json({ error: 'Email verification is not required for this account' }, { status: 400 });
     }
 
     if (user.emailVerified) {

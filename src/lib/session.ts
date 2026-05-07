@@ -189,10 +189,13 @@ export async function getAuthContext(request?: Request): Promise<AuthContext | n
     activeCompanyRole = 'OWNER';
   }
 
+  // SuperDev (AppOwner / AlphaAi) is ALWAYS treated as verified
+  const effectiveEmailVerified = session.user.isSuperDev ? true : (session.user.emailVerified ?? false);
+
   return {
     id: session.user.id,
     email: session.user.email,
-    emailVerified: session.user.emailVerified,
+    emailVerified: effectiveEmailVerified,
     businessName: session.user.businessName,
     isSuperDev: session.user.isSuperDev,
     activeCompanyId: session.activeCompanyId,
